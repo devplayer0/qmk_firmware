@@ -1,6 +1,7 @@
 BOOTLOADER = qmk-hid
 BOOTLOADER_SIZE = 512
 PROGRAM_CMD = $(HID_BOOTLOADER_CLI) -mmcu=$(MCU) -w -v $(BUILD_DIR)/$(TARGET).hex
+SRC += misc_utils.c
 
 UNICODE_ENABLE = yes
 TAP_DANCE_ENABLE = yes
