@@ -62,29 +62,32 @@ enum tapdance {
     TD_NO_GAME,
 };
 
-void dance_go_game(qk_tap_dance_state_t *state, void *user_data) {
+typedef void (*td_triple_tap_fn_t)(void);
+typedef struct td_triple_tap_action {
+    uint16_t kc;
+    td_triple_tap_fn_t action;
+} td_triple_tap_action_t;
+
+void triple_tap_handle_dance_finished(qk_tap_dance_state_t *state, void *user_data) {
+    td_triple_tap_action_t *config = (td_triple_tap_action_t*)user_data;
     if (state->count == 1) {
-        tap_code(KC_BSLS);
+        tap_code(config->kc);
     } else if (state->count == 3) {
-        layer_move(_GAME);
+        config->action();
     } else {
         reset_tap_dance(state);
     }
 }
 
-void dance_no_game(qk_tap_dance_state_t *state, void *user_data) {
-    if (state->count == 1) {
-        tap_code(KC_LCTL);
-    } else if (state->count == 3) {
-        layer_clear();
-    } else {
-        reset_tap_dance(state);
-    }
-}
+#define ACTION_TAP_DANCE_TRIPLE_TAP(kc, action) \
+    { .fn = {NULL, triple_tap_handle_dance_finished, NULL}, .user_data = (void*)&((td_triple_tap_action_t){kc, action}), }
+
+static inline void dance_go_game(void) { layer_move(_GAME); };
+static inline void dance_no_game(void) { layer_clear(); };
 
 qk_tap_dance_action_t tap_dance_actions[] = {
-    [TD_GO_GAME] = ACTION_TAP_DANCE_FN(dance_go_game),
-    [TD_NO_GAME] = ACTION_TAP_DANCE_FN(dance_no_game),
+    [TD_GO_GAME] = ACTION_TAP_DANCE_TRIPLE_TAP(KC_BSLS, dance_go_game),
+    [TD_NO_GAME] = ACTION_TAP_DANCE_TRIPLE_TAP(KC_LCTL, dance_no_game),
 };
 
 #define BSLS_GME TD(TD_GO_GAME)
